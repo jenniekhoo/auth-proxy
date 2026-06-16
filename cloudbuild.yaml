@@ -1,26 +1,28 @@
 steps:
-  # Step 1: Build the Docker image using the Dockerfile
+  # Step 1: Compile the Docker image using the Dockerfile at root context (.)
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build', 
-      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}',
-      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest',
-      '.'
-    ]
+    id: 'Build Container Image'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
+      - '.'
 
-  # Step 2: Push the unique commit-tagged image to Artifact Registry
+  # Step 2: Safely push the newly compiled image tags up to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}']
+    id: 'Push Image to Registry'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}'
 
-  # Step 3: Push the 'latest' tagged image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest']
-
-# Default substitutions that match your Terraform infrastructure configurations
-substitutions:
-  _REGION: 'us-central1'
-  _REPO_NAME: 'auth-proxy'
-  _SERVICE_NAME: 'auth-proxy'
+# Specify the built artifact tags explicitly to register them cleanly in Cloud Build histories
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
 
 options:
+  # Directs the build steps to route logging directly to Cloud Logging
   logging: CLOUD_LOGGING_ONLY
