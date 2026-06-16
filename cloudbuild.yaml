@@ -1,5 +1,5 @@
 steps:
-  # Step 1: Compile the Docker image using the Dockerfile at root context (.)
+  # Step 1: Compile the Docker image using the substitutions
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Build Container Image'
     args:
@@ -10,7 +10,7 @@ steps:
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
       - '.'
 
-  # Step 2: Safely push the newly compiled image tags up to Artifact Registry
+  # Step 2: Push the compiled image tags up to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Push Image to Registry'
     args:
@@ -18,11 +18,9 @@ steps:
       - '--all-tags'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}'
 
-# Specify the built artifact tags explicitly to register them cleanly in Cloud Build histories
 images:
   - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}'
   - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
 
 options:
-  # Directs the build steps to route logging directly to Cloud Logging
   logging: CLOUD_LOGGING_ONLY
