@@ -1,24 +1,24 @@
-# Use an official lightweight Python runtime as a parent image
+# Use an official, lightweight Python runtime environment
 FROM python:3.11-slim
 
-# Set environment variables to keep Python from writing .pyc files or buffering stdout
+# Prevent Python from writing .pyc files to disk and force unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Set the working directory inside the container
+# Set the active working directory inside the container
 WORKDIR /app
 
-# Copy the requirements file first to leverage Docker cache layers
+# Step 1: Copy only dependency configurations to leverage layer caching
 COPY requirements.txt .
 
-# Install dependencies
+# Step 2: Install required packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your Python application code
+# Step 3: Copy the rest of the application source code 
 COPY . .
 
-# Cloud Run defaults to port 8080
+# Cloud Run defaults to exposing traffic on port 8080
 EXPOSE 8080
 
-# Command to run your Python application (adjust main:app based on your web framework like FastAPI/Flask)
+# Command to execute the Python runtime application engine
 CMD ["python", "main.py"]
