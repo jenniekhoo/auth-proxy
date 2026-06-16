@@ -1,0 +1,26 @@
+steps:
+  # Step 1: Build the Docker image using the Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}',
+      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest',
+      '.'
+    ]
+
+  # Step 2: Push the unique commit-tagged image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}']
+
+  # Step 3: Push the 'latest' tagged image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest']
+
+# Default substitutions that match your Terraform infrastructure configurations
+substitutions:
+  _REGION: 'us-central1'
+  _REPO_NAME: 'auth-proxy'
+  _SERVICE_NAME: 'auth-proxy'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
